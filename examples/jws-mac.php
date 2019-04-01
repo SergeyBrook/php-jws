@@ -1,18 +1,18 @@
 <?php
 /**
- * JWS-RSA example
+ * JWS-MAC example
  */
 
-use SBrook\JWS\Mac;
-use SBrook\JWS\Exception\MacException;
+use SBrook\JWS\JwsMac;
+use SBrook\JWS\Exception\JwsException;
 
 require_once("../src/autoload.php");
 
 $exitCode = 0;
 
 try {
-	$jws= new Mac();
-} catch (MacException $e) {
+	$jws= new JwsMac();
+} catch (JwsException $e) {
 	do {
 		echo "Error (".$e->getCode()."): ".$e->getMessage()."\n\tIn file: ".$e->getFile()." line: ".$e->getLine()."\n";
 	} while ($e = $e->getPrevious());

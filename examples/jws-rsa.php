@@ -1,6 +1,6 @@
 <?php
 /**
- * JWS-MAC example
+ * JWS-RSA example
  */
 
 require_once("../src/autoload.php");

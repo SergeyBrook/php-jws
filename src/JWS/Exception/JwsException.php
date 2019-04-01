@@ -1,6 +1,6 @@
 <?php
 /**
- * SBrook\JWS\Exception\RsaException
+ * SBrook\JWS\Exception\JwsException
  */
 
 namespace SBrook\JWS\Exception;
@@ -8,10 +8,10 @@ namespace SBrook\JWS\Exception;
 use Exception;
 
 /**
- * Class RsaException
+ * Class JwsException
  * @package SBrook\JWS\Exception
  */
-class RsaException extends Exception {
+class JwsException extends Exception {
 	// Redefine the exception so message isn't optional:
 	public function __construct($message, $code = 0, Exception $previous = null) {
 		// Some code

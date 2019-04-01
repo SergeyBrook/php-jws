@@ -12,7 +12,8 @@
 		"issues": "https://github.com/SergeyBrook/jws/issues"
 	},
 	"require": {
-		"php": ">=7.0"
+		"php": ">=7.0",
+		"ext-json": "*"
 	},
 	"autoload": {
 		"psr-4": {
