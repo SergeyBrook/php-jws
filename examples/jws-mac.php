@@ -25,7 +25,7 @@ $header = [
 ];
 
 // For JWT registered claim names see (RFC 7519, Section 4.1)
-$payload = [
+$payloadData = [
 	"iss" => "https://issuer.com",		// Issuer
 	"sub" => "subject@something.com",	// Subject
 	"aud" => "https://audience.com",	// Audience
@@ -40,7 +40,7 @@ try {
 	$jws = new JwsMac($secretOne);
 
 	// Create and sign JWT:
-	$jwt = $jws->sign($payload, $header);
+	$jwt = $jws->sign(json_encode($payloadData), $header);
 	echo "\n--- BEGIN JWT ---\n".$jwt."\n---- END JWT ----\n";
 
 	// Verify JWT with right secret key ($secretOne - already set in constructor):
@@ -60,7 +60,7 @@ try {
 	print_r($h);
 
 	// Get JWT payload:
-	$p = $jws->getPayload($jwt);
+	$p = json_decode($jws->getPayload($jwt), true);
 	echo "\nPayload => ";
 	print_r($p);
 } catch (JwsException $e) {
