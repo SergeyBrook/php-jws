@@ -12,12 +12,25 @@ use SBrook\JWS\Exception\JwsException;
  * @package SBrook\JWS
  */
 abstract class Jws {
-	abstract function sign(array $payload, array $header = []);
+	/**
+	 * Create JWS from payload and optional header and sign it.
+	 * @param array $payload Payload data.
+	 * @param array $header Header data (optional).
+	 * @return string JWS.
+	 */
+	abstract function sign(array $payload, array $header = []): string;
+
+	/**
+	 * Verify JWS signature.
+	 * @param string $jws JWS.
+	 * @return bool TRUE on valid signature or FALSE on invalid.
+	 */
 	abstract function verify(string $jws): bool;
 
 	/**
-	 * @param string $jws
-	 * @return array
+	 * Get JWS header.
+	 * @param string $jws JWS.
+	 * @return array Decoded JWS header.
 	 * @throws JwsException
 	 */
 	public function getHeader(string $jws): array {
@@ -35,11 +48,12 @@ abstract class Jws {
 	}
 
 	/**
-	 * @param string $jws
-	 * @return mixed
+	 * Get JWS payload.
+	 * @param string $jws JWS.
+	 * @return array Decoded JWS payload.
 	 * @throws JwsException
 	 */
-	public function getPayload(string $jws) {
+	public function getPayload(string $jws): array {
 		if ($jws) {
 			list(, $p, ) = explode(".", $jws);
 			$payload = json_decode(base64_decode($p), true);

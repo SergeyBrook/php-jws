@@ -19,13 +19,18 @@ class JwsMac extends Jws implements Symmetric {
 	private $secretKey = "";
 
 	/**
-	 * Algorithms map JWS => hash_hmac().
-	 *  0-th element is a default.
+	 * Default signature algorithm.
+	 * @var string
+	 */
+	private $defaultAlgo = "HS256";
+
+	/**
+	 * Signature algorithms map JWS => hash_hmac().
 	 *
 	 * JWS signature algorithms (RFC 7518, Section 3.2) - "alg":
 	 *  HS256: HMAC using SHA-256 - Min recommended key length: 32 bytes
-	 *	HS384: HMAC using SHA-384 - Min recommended key length: 48 bytes
-	 *	HS512: HMAC using SHA-512 - Min recommended key length: 64 bytes
+	 *  HS384: HMAC using SHA-384 - Min recommended key length: 48 bytes
+	 *  HS512: HMAC using SHA-512 - Min recommended key length: 64 bytes
 	 *
 	 * @var array
 	 */
@@ -61,7 +66,7 @@ class JwsMac extends Jws implements Symmetric {
 	/**
 	 * Set JWS signature secret key - overwrites one set in constructor.
 	 * @param string $key JWS signature secret key.
-	 * @param string $pass Not in use.
+	 * @param string $pass (Optional) Not in use.
 	 * @return bool TRUE on success or FALSE on failure.
 	 */
 	public function setSecretKey(string $key, string $pass = ""): bool {
@@ -73,25 +78,93 @@ class JwsMac extends Jws implements Symmetric {
 		return $result;
 	}
 
-	public function sign(array $payload, array $header = []) {}
+	/**
+	 * Create JWS from payload and optional header and sign it.
+	 * @param array $payload Payload data.
+	 * @param array $header (Optional) Header data.
+	 * @return string JWS.
+	 * @throws JwsException
+	 */
+	public function sign(array $payload, array $header = []): string {
+		if (count($payload) > 0) {
+			// Remove empty header parameters:
+			foreach ($header as $key => $value) {
+				if (!$value) {
+					unset($header[$key]);
+				}
+			}
 
-	public function verify(string $jws): bool {}
+			if (array_key_exists("alg", $header)) {
+				$header["alg"] = strtoupper($header["alg"]);
+			} else {
+				$header["alg"] = $this->defaultAlgo;
+			}
+
+			if (array_key_exists($header["alg"], $this->algos)) {
+				$h = base64_encode(json_encode($header));
+				$p = base64_encode(json_encode($payload));
+
+				try {
+					return $h.".".$p.".".$this->createSignature($h, $p);
+				} catch (JwsException $e) {
+					throw $e;
+				}
+			} else {
+				throw new JwsException("Requested unknown signature algorithm in header", 15);
+			}
+		} else {
+			throw new JwsException("Payload can't be an empty array", 14);
+		}
+	}
+
+	/**
+	 * Verify JWS signature.
+	 * @param string $jws JWS.
+	 * @return bool TRUE on valid signature or FALSE on invalid.
+	 * @throws JwsException
+	 */
+	public function verify(string $jws): bool {
+		if ($jws) {
+			list($h, $p, $s) = explode(".", $jws);
+
+			try {
+				return $s === $this->createSignature($h, $p);
+			} catch (JwsException $e) {
+				throw $e;
+			}
+		} else {
+			throw new JwsException("JWS can't be an empty string", 1);
+		}
+	}
 
 	/**
 	 * Create JWS signature.
 	 * @param string $header Encoded header.
 	 * @param string $payload Encoded payload.
-	 * @return bool|string Signature. String containing JWS signature or bool FALSE on failure.
+	 * @return string JWS signature.
+	 * @throws JwsException
 	 */
-	private function createSignature(string $header, string $payload) {
-		$result = false;
-		$h = json_decode(base64_decode($header), true);
-		if (is_array($h) && array_key_exists("alg", $h)) {
-			$algo = strtoupper($h["alg"]);
-			if (array_key_exists($algo, $this->algos) && strlen($this->secretKey) > 0) {
-				$result = base64_encode(hash_hmac($this->algos[$algo], $header . "." . $payload, $this->secretKey, true));
+	private function createSignature(string $header, string $payload): string {
+		if (strlen($payload) > 0) {
+			$h = json_decode(base64_decode($header), true);
+
+			if (is_null($h)) {
+				throw new JwsException("Error while parsing JWS header", 2);
+			} else {
+				if (is_array($h) && array_key_exists("alg", $h)) {
+					$algo = strtoupper($h["alg"]);
+
+					if (array_key_exists($algo, $this->algos)) {
+						return base64_encode(hash_hmac($this->algos[$algo], $header . "." . $payload, $this->secretKey, true));
+					} else {
+						throw new JwsException("Unknown signature algorithm in JWS header", 13);
+					}
+				} else {
+					throw new JwsException("Invalid JWS header", 12);
+				}
 			}
+		} else {
+			throw new JwsException("JWS payload can't be an empty string", 11);
 		}
-		return $result;
 	}
 }
