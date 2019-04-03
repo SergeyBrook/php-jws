@@ -1,5 +1,7 @@
 #!/bin/bash
 # Generate private key and self-signed certificate.
+# Make sure script has execute permissions, if not:
+#  $ chmod +x ./create-cert.sh
 # Usage:
 #  $ ./create-cert.sh NAME DAYS
 # Where:
