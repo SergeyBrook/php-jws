@@ -1,5 +1,5 @@
 {
-	"name": "sergeybrook/jws",
+	"name": "sergeybrook/php-jws",
 	"description": "JSON Web Signature (JWS) library for PHP",
 	"type": "library",
 	"keywords": ["jws"],
@@ -9,7 +9,7 @@
 	],
 	"support": {
 		"email": "brook.sergey@gmail.com",
-		"issues": "https://github.com/SergeyBrook/jws/issues"
+		"issues": "https://github.com/SergeyBrook/php-jws/issues"
 	},
 	"require": {
 		"php": ">=7.0",

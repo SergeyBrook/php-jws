@@ -16,13 +16,13 @@ class JwsMac extends Jws implements Symmetric {
 	 * JWS signature secret key.
 	 * @var string
 	 */
-	private $secretKey = "";
+	protected $secretKey = "";
 
 	/**
 	 * Default signature algorithm.
 	 * @var string
 	 */
-	private $defaultAlgo = "HS256";
+	protected $defaultAlgo = "HS256";
 
 	/**
 	 * Signature algorithms map JWS => hash_hmac().
@@ -34,7 +34,7 @@ class JwsMac extends Jws implements Symmetric {
 	 *
 	 * @var array
 	 */
-	private $algos = [
+	protected $algos = [
 		"HS256" => "SHA256",
 		"HS384" => "SHA384",
 		"HS512" => "SHA512"
