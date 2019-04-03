@@ -15,7 +15,7 @@ require_once("../src/autoload.php");
 $exitCode = 0;
 
 $prvOne = "file://./cert/prv-one.key";
-$prvPas = "TEBtYjByZ2hpbmk=";
+$prvOnePass = "password";
 
 $pubOne = "file://./cert/pub-one.crt";
 $pubTwo = "file://./cert/pub-two.crt";
@@ -43,7 +43,7 @@ try {
 	$jws = new JwsRsa();
 
 	// Sign JWT with private key ($prvOne):
-	$jws->setPrivateKey($prvOne, base64_decode($prvPas));
+	$jws->setPrivateKey($prvOne, $prvOnePass);
 	$jwt = $jws->sign(json_encode($payloadData), $header);
 	echo "\n--- BEGIN JWT ---\n".$jwt."\n---- END JWT ----\n";
 

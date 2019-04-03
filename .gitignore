@@ -1,4 +1,6 @@
 /.idea
-/bin
+/examples/cert/*.key
+/examples/cert/*.crt
+/vendor
 .DS_Store
 *.code-workspace
