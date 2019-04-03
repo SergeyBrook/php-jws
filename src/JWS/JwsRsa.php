@@ -68,11 +68,12 @@ class JwsRsa extends Jws implements Asymmetric
 
 	/**
 	 * Set private key - overwrites previously set key.
-	 * @param string $key Private key. Same as openssl_pkey_get_private "key" parameter (http://php.net/manual/en/function.openssl-pkey-get-private.php).
-	 * @param string $pass (Optional) Private key password. Same as openssl_pkey_get_private "passphrase" parameter (http://php.net/manual/en/function.openssl-pkey-get-private.php).
-	 * @return bool TRUE on success or FALSE on failure.
+	 * @param string $key - Private key. Same as openssl_pkey_get_private "key" parameter (http://php.net/manual/en/function.openssl-pkey-get-private.php).
+	 * @param string $pass - (Optional) Private key password. Same as openssl_pkey_get_private "passphrase" parameter (http://php.net/manual/en/function.openssl-pkey-get-private.php).
+	 * @return bool - TRUE on success or FALSE on failure.
+	 * TODO: Validate string input.
 	 */
-	public function setPrivateKey(string $key, string $pass = ""): bool {
+	public function setPrivateKey($key, $pass = ""): bool {
 		$result = false;
 
 		if ($this->privateKey) {
@@ -89,10 +90,11 @@ class JwsRsa extends Jws implements Asymmetric
 
 	/**
 	 * Set public key - overwrites previously set key.
-	 * @param string $key Public key. Same as openssl_pkey_get_public "certificate" parameter (http://php.net/manual/en/function.openssl-pkey-get-public.php).
-	 * @return bool TRUE on success or FALSE on failure.
+	 * @param string $key - Public key. Same as openssl_pkey_get_public "certificate" parameter (http://php.net/manual/en/function.openssl-pkey-get-public.php).
+	 * @return bool - TRUE on success or FALSE on failure.
+	 * TODO: Validate string input.
 	 */
-	public function setPublicKey(string $key): bool {
+	public function setPublicKey($key): bool {
 		$result = false;
 
 		if ($this->publicKey) {
@@ -109,45 +111,49 @@ class JwsRsa extends Jws implements Asymmetric
 
 	/**
 	 * Create JWS from payload and optional header and sign it.
-	 * @param string $payload Payload.
-	 * @param array $header (Optional) Header data.
-	 * @return string JWS.
+	 * @param string $payload - Payload.
+	 * @param array $header - (Optional) Header data.
+	 * @return string - JWS.
 	 * @throws JwsException
 	 */
-	public function sign(string $payload, array $header = []): string {
+	public function sign($payload, array $header = []): string {
 		if ($this->privateKey) {
-			if (strlen(trim($payload)) > 0) {
-				// Remove empty header parameters:
-				foreach ($header as $key => $value) {
-					if (!$value) {
-						unset($header[$key]);
+			if (is_string($payload)) {
+				if (strlen($payload) > 0) {
+					// Remove empty header parameters:
+					foreach ($header as $key => $value) {
+						if (!$value) {
+							unset($header[$key]);
+						}
 					}
-				}
 
-				// If not specified, set default signature algorithm:
-				if (!array_key_exists("alg", $header)) {
-					$header["alg"] = $this->defaultAlgo;
-				}
+					// If not specified, set default signature algorithm:
+					if (!array_key_exists("alg", $header)) {
+						$header["alg"] = $this->defaultAlgo;
+					}
 
-				// Don't trust anyone:
-				$header["alg"] = strtoupper($header["alg"]);
+					// Don't trust anyone:
+					$header["alg"] = strtoupper($header["alg"]);
 
-				if ($this->isValidAlgorithm($header["alg"])) {
-					$h = base64_encode(json_encode($header));
-					$p = base64_encode($payload);
+					if ($this->isValidAlgorithm($header["alg"])) {
+						$h = base64_encode(json_encode($header));
+						$p = base64_encode($payload);
 
-					$signature = null;
-					$v = openssl_sign($h . "." . $p, $signature, $this->privateKey, $this->algos[$header["alg"]]);
-					if ($v) {
-						return $h . "." . $p . "." . base64_encode($signature);
+						$signature = null;
+						$v = openssl_sign($h . "." . $p, $signature, $this->privateKey, $this->algos[$header["alg"]]);
+						if ($v) {
+							return $h . "." . $p . "." . base64_encode($signature);
+						} else {
+							throw new JwsException($this->getOpensslErrors(), 20);
+						}
 					} else {
-						throw new JwsException($this->getOpensslErrors(), 20);
+						throw new JwsException("Requested unknown signature algorithm in header", 14);
 					}
 				} else {
-					throw new JwsException("Requested unknown signature algorithm in header", 13);
+					throw new JwsException("Payload can't be an empty string", 13);
 				}
 			} else {
-				throw new JwsException("Payload can't be an empty string", 12);
+				throw new JwsException("Payload should be a string", 12);
 			}
 		} else {
 			throw new JwsException("Private key is not set", 19);
@@ -156,8 +162,8 @@ class JwsRsa extends Jws implements Asymmetric
 
 	/**
 	 * Verify JWS signature.
-	 * @param string $jws JWS.
-	 * @return bool TRUE on valid signature, FALSE on invalid.
+	 * @param string $jws - JWS.
+	 * @return bool - TRUE on valid signature, FALSE on invalid.
 	 * @throws JwsException
 	 */
 	public function verify(string $jws): bool {
@@ -189,16 +195,16 @@ class JwsRsa extends Jws implements Asymmetric
 
 	/**
 	 * Check validity of signature algorithm.
-	 * @param string $algorithm Algorithm name.
-	 * @return bool TRUE on valid algorithm, FALSE on invalid.
+	 * @param string $algorithm - Algorithm name.
+	 * @return bool - TRUE on valid algorithm, FALSE on invalid.
 	 */
-	protected function isValidAlgorithm(string $algorithm): bool {
-		return array_key_exists(strtoupper($algorithm), $this->algos);
+	protected function isValidAlgorithm($algorithm): bool {
+		return is_string($algorithm) && array_key_exists(strtoupper($algorithm), $this->algos);
 	}
 
 	/**
 	 * Get openssl error queue.
-	 * @return string Openssl error messages separated by space.
+	 * @return string - Openssl error messages separated by space.
 	 */
 	protected function getOpensslErrors(): string {
 		$message = "";

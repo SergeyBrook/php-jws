@@ -12,9 +12,8 @@ namespace SBrook\JWS;
 interface Symmetric {
 	/**
 	 * Set secret key.
-	 * @param string $key Secret key.
-	 * @param string $pass (Optional) Secret key password.
-	 * @return bool TRUE on success or FALSE on failure.
+	 * @param $key - Secret key.
+	 * @param $pass - Secret key password.
 	 */
-	public function setSecretKey(string $key, string $pass = ""): bool;
+	public function setSecretKey($key, $pass);
 }

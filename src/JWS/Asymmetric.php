@@ -12,16 +12,14 @@ namespace SBrook\JWS;
 interface Asymmetric {
 	/**
 	 * Set private key.
-	 * @param string $key Private key.
-	 * @param string $pass (Optional) Private key password.
-	 * @return bool TRUE on success or FALSE on failure.
+	 * @param $key - Private key.
+	 * @param $pass - Private key password.
 	 */
-	public function setPrivateKey(string $key, string $pass = ""): bool;
+	public function setPrivateKey($key, $pass);
 
 	/**
 	 * Set public key.
-	 * @param string $key Public key.
-	 * @return bool TRUE on success or FALSE on failure.
+	 * @param $key - Public key.
 	 */
-	public function setPublicKey(string $key): bool;
+	public function setPublicKey($key);
 }

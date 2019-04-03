@@ -42,7 +42,7 @@ class JwsMac extends Jws implements Symmetric {
 
 	/**
 	 * JwsMac constructor.
-	 * @param string $key JWS signature secret key.
+	 * @param string $key - JWS signature secret key.
 	 * @throws JwsException
 	 */
 	public function __construct(string $key) {
@@ -66,11 +66,12 @@ class JwsMac extends Jws implements Symmetric {
 
 	/**
 	 * Set JWS signature secret key - overwrites previously set key.
-	 * @param string $key JWS signature secret key.
-	 * @param string $pass (Optional) Not in use.
-	 * @return bool TRUE on success, FALSE on failure.
+	 * @param string $key - JWS signature secret key.
+	 * @param string $pass - (Optional) Not in use.
+	 * @return bool - TRUE on success, FALSE on failure.
+	 * TODO: Validate string input.
 	 */
-	public function setSecretKey(string $key, string $pass = ""): bool {
+	public function setSecretKey($key, $pass = ""): bool {
 		$result = false;
 
 		if (strlen($key) > 0) {
@@ -83,45 +84,49 @@ class JwsMac extends Jws implements Symmetric {
 
 	/**
 	 * Create JWS from payload and optional header and sign it.
-	 * @param string $payload Payload.
-	 * @param array $header (Optional) Header data.
-	 * @return string JWS.
+	 * @param string $payload - Payload.
+	 * @param array $header - (Optional) Header data.
+	 * @return string - JWS.
 	 * @throws JwsException
 	 */
-	public function sign(string $payload, array $header = []): string {
-		if (strlen(trim($payload)) > 0) {
-			// Remove empty header parameters:
-			foreach ($header as $key => $value) {
-				if (!$value) {
-					unset($header[$key]);
+	public function sign($payload, array $header = []): string {
+		if (is_string($payload)) {
+			if (strlen($payload) > 0) {
+				// Remove empty header parameters:
+				foreach ($header as $key => $value) {
+					if (!$value) {
+						unset($header[$key]);
+					}
 				}
-			}
 
-			// If not specified, set default signature algorithm:
-			if (!array_key_exists("alg", $header)) {
-				$header["alg"] = $this->defaultAlgo;
-			}
+				// If not specified, set default signature algorithm:
+				if (!array_key_exists("alg", $header)) {
+					$header["alg"] = $this->defaultAlgo;
+				}
 
-			// Don't trust anyone:
-			$header["alg"] = strtoupper($header["alg"]);
+				// Don't trust anyone:
+				$header["alg"] = strtoupper($header["alg"]);
 
-			if ($this->isValidAlgorithm($header["alg"])) {
-				$h = base64_encode(json_encode($header));
-				$p = base64_encode($payload);
+				if ($this->isValidAlgorithm($header["alg"])) {
+					$h = base64_encode(json_encode($header));
+					$p = base64_encode($payload);
 
-				return $h.".".$p.".".base64_encode(hash_hmac($this->algos[$header["alg"]], $h.".".$p, $this->secretKey, true));
+					return $h . "." . $p . "." . base64_encode(hash_hmac($this->algos[$header["alg"]], $h . "." . $p, $this->secretKey, true));
+				} else {
+					throw new JwsException("Requested unknown signature algorithm in header", 14);
+				}
 			} else {
-				throw new JwsException("Requested unknown signature algorithm in header", 13);
+				throw new JwsException("Payload can't be an empty string", 13);
 			}
 		} else {
-			throw new JwsException("Payload can't be an empty string", 12);
+			throw new JwsException("Payload should be a string", 12);
 		}
 	}
 
 	/**
 	 * Verify JWS signature.
-	 * @param string $jws JWS.
-	 * @return bool TRUE on valid signature, FALSE on invalid.
+	 * @param string $jws - JWS.
+	 * @return bool - TRUE on valid signature, FALSE on invalid.
 	 * @throws JwsException
 	 */
 	public function verify(string $jws): bool {
@@ -142,10 +147,10 @@ class JwsMac extends Jws implements Symmetric {
 
 	/**
 	 * Check validity of signature algorithm.
-	 * @param string $algorithm Algorithm name.
-	 * @return bool TRUE on valid algorithm, FALSE on invalid.
+	 * @param string $algorithm - Algorithm name.
+	 * @return bool - TRUE on valid algorithm, FALSE on invalid.
 	 */
-	protected function isValidAlgorithm(string $algorithm): bool {
-		return array_key_exists(strtoupper($algorithm), $this->algos);
+	protected function isValidAlgorithm($algorithm): bool {
+		return is_string($algorithm) && array_key_exists(strtoupper($algorithm), $this->algos);
 	}
 }

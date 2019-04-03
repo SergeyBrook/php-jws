@@ -14,33 +14,33 @@ use SBrook\JWS\Exception\JwsException;
 abstract class Jws {
 	/**
 	 * Create JWS from payload and optional header and sign it.
-	 * @param string $payload Payload.
-	 * @param array $header Header data (optional).
-	 * @return string JWS.
+	 * @param $payload - Payload.
+	 * @param array $header - Header data (optional).
+	 * @return string - JWS.
 	 */
-	abstract public function sign(string $payload, array $header = []): string;
+	abstract public function sign($payload, array $header = []): string;
 
 	/**
 	 * Verify JWS signature.
-	 * @param string $jws JWS.
-	 * @return bool TRUE on valid signature, FALSE on invalid.
+	 * @param string $jws - JWS.
+	 * @return bool - TRUE on valid signature, FALSE on invalid.
 	 */
 	abstract public function verify(string $jws): bool;
 
 	/**
 	 * Check validity of signature algorithm.
-	 * @param string $algorithm
-	 * @return bool TRUE on valid algorithm, FALSE on invalid.
+	 * @param $algorithm - Algorithm.
+	 * @return bool - TRUE on valid algorithm, FALSE on invalid.
 	 */
-	abstract protected function isValidAlgorithm(string $algorithm): bool;
+	abstract protected function isValidAlgorithm($algorithm): bool;
 
 	/**
 	 * Get JWS header.
-	 * @param string $jws JWS.
-	 * @return array Decoded JWS header.
+	 * @param string $jws - JWS.
+	 * @return array - Decoded JWS header.
 	 * @throws JwsException
 	 */
-	public function getHeader(string $jws): array {
+	public function getHeader(string $jws) {
 		if ($jws) {
 			list($h, , ) = explode(".", $jws);
 			$header = json_decode(base64_decode($h, true), true);
@@ -56,11 +56,11 @@ abstract class Jws {
 
 	/**
 	 * Get JWS payload.
-	 * @param string $jws JWS.
-	 * @return string Decoded JWS payload.
+	 * @param string $jws - JWS.
+	 * @return string - Decoded JWS payload.
 	 * @throws JwsException
 	 */
-	public function getPayload(string $jws): string {
+	public function getPayload(string $jws) {
 		if ($jws) {
 			list(, $p, ) = explode(".", $jws);
 			$payload = base64_decode($p, true);
@@ -76,8 +76,8 @@ abstract class Jws {
 
 	/**
 	 * Check validity of JWS header.
-	 * @param string|array $header JWS header (encoded|decoded).
-	 * @return bool TRUE on valid JWS header, FALSE on invalid.
+	 * @param string|array $header - JWS header (encoded|decoded).
+	 * @return bool - TRUE on valid JWS header, FALSE on invalid.
 	 */
 	protected function isValidHeader($header): bool {
 		// If encoded header - decode it:
