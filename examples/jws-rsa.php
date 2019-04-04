@@ -1,7 +1,13 @@
 <?php
 /**
  * JWS-RSA example
- * Run from CLI.
+ * Usage:
+ *  1. Generate two key/certificate pairs - run from examples/cert dir:
+ *     $ ./create-cert.sh one 365
+ *     $ ./create-cert.sh two 365
+ *     This will create "prv-one.key"/"pub-one.crt" and "prv-two.key"/"pub-two.crt" pairs in examples/cert dir.
+ *  2. Run from examples dir:
+ *     $ php ./jws-rsa.php
  */
 
 use SBrook\JWS\JwsRsa;
@@ -22,52 +28,67 @@ $pubTwo = "file://./cert/pub-two.crt";
 
 // For JWS registered header parameter names see (RFC 7515, Section 4.1)
 $header = [
-	"typ" => "JWT",
+	"typ" => "TXT",
 	"alg" => "",
-	"x5u" => ""
+	"cty" => ""
 ];
 
-// For JWT registered claim names see (RFC 7519, Section 4.1)
-$payloadData = [
-	"iss" => "https://issuer.com",		// Issuer
-	"sub" => "subject@something.com",	// Subject
-	"aud" => "https://audience.com",	// Audience
-	"exp" => time() + 86400,			// Expiration Time
-	"nbf" => time(),					// Not Before
-	"iat" => time(),					// Issued At
-	"jti" => uniqid()					// JWT ID
-];
+$payloadOne = "Original message content";
+$payloadTwo = "Fake message content";
 
 try {
 	// Create JwsRsa instance:
 	$jws = new JwsRsa();
 
-	// Sign JWT with private key ($prvOne):
+
+	// Create original message from $payloadOne and sign with private key $prvOne:
 	$jws->setPrivateKey($prvOne, $prvOnePass);
-	$jwt = $jws->sign(json_encode($payloadData), $header);
-	echo "\n--- BEGIN JWT ---\n".$jwt."\n---- END JWT ----\n";
+	$message = $jws->sign($payloadOne, $header);
+	echo "\nOriginal message:\n";
+	echo "--- BEGIN JWS ---\n$message\n---- END JWS ----\n";
 
-	// Verify JWT with right public key ($pubOne):
-	$jws->setPublicKey($pubOne);
-	$v = $jws->verify($jwt);
-	echo "\nVerifying JWT with right public key:\n";
-	echo "JWT is ".($v ? "VALID" : "NOT VALID")."\n";
-
-	// Verify JWT with wrong public key ($pubTwo):
-	$jws->setPublicKey($pubTwo);
-	$v = $jws->verify($jwt);
-	echo "\nVerifying JWT with wrong public key:\n";
-	echo "JWT is ".($v ? "VALID" : "NOT VALID")."\n";
-
-	// Get JWT header:
-	$h = $jws->getHeader($jwt);
+	// Get original message header:
+	$h = $jws->getHeader($message);
 	echo "\nHeader => ";
 	print_r($h);
 
-	// Get JWT payload:
-	$p = json_decode($jws->getPayload($jwt), true);
-	echo "\nPayload => ";
-	print_r($p);
+	// Get original message payload:
+	$p = $jws->getPayload($message);
+	echo "\nPayload => \"$p\"\n";
+
+	// Verify original message with right public key $pubOne:
+	$jws->setPublicKey($pubOne);
+	$v = $jws->verify($message);
+	echo "\nVerifying original message with right public key:\n";
+	echo "Message is " . ($v ? "VALID" : "INVALID") . "\n";
+
+	// Verify original message with wrong public key $pubTwo:
+	$jws->setPublicKey($pubTwo);
+	$v = $jws->verify($message);
+	echo "\nVerifying original message with wrong public key:\n";
+	echo "Message is " . ($v ? "VALID" : "INVALID") . "\n";
+
+
+	echo "\n" . str_repeat("=", 80) . "\n";
+	// Now, let's manipulate original message by putting a fake content into it:
+
+	// Get header and signature from original message:
+	list($h, , $s) = explode(".", $message);
+	// Rebuild message with fake payload $payloadTwo:
+	$fakeMessage = $h . "." . base64_encode($payloadTwo) . "." . $s;
+	echo "\nFake message:\n";
+	echo "--- BEGIN JWS ---\n$fakeMessage\n---- END JWS ----\n";
+
+	// Get fake message payload:
+	$p = $jws->getPayload($fakeMessage);
+	echo "\nPayload => \"$p\"\n";
+
+	// Verify fake message with right public key $pubOne:
+	$jws->setPublicKey($pubOne);
+	$v = $jws->verify($fakeMessage);
+	echo "\nVerifying fake message with right public key:\n";
+	echo "Message is " . ($v ? "VALID" : "INVALID") . "\n";
+
 } catch (JwsException $e) {
 	$exitCode = 1;
 

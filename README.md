@@ -1,4 +1,4 @@
-# JWS
+# PHP - JWS
 
 JSON Web Signature (JWS) library for PHP
 
@@ -7,7 +7,7 @@ JSON Web Signature (JWS) library for PHP
 Using [Composer](https://getcomposer.org/):
 
 ```bash
-$ composer require sergeybrook/jws
+$ composer require sergeybrook/php-jws
 ```
 
 Or:

@@ -10,6 +10,8 @@ use SBrook\JWS\Exception\JwsException;
 /**
  * Class JwsMac
  * @package SBrook\JWS
+ * @throws JwsException:
+ *  30. Secret key should be a non empty string
  */
 class JwsMac extends Jws implements Symmetric {
 	/**
@@ -44,13 +46,12 @@ class JwsMac extends Jws implements Symmetric {
 	 * JwsMac constructor.
 	 * @param string $key - JWS signature secret key.
 	 * @throws JwsException
-	 * TODO: Validate $key is string.
 	 */
 	public function __construct($key) {
-		if (strlen($key) > 0) {
+		if (is_string($key) && strlen($key) > 0) {
 			$this->secretKey = $key;
 		} else {
-			throw new JwsException("Secret key can't be an empty string", 10);
+			throw new JwsException("Secret key should be a non empty string", 30);
 		}
 	}
 
@@ -70,12 +71,11 @@ class JwsMac extends Jws implements Symmetric {
 	 * @param string $key - JWS signature secret key.
 	 * @param $pass - (Optional) Not in use.
 	 * @return bool - TRUE on success, FALSE on failure.
-	 * TODO: Validate $key is string.
 	 */
 	public function setSecretKey($key, $pass = "") {
 		$result = false;
 
-		if (strlen($key) > 0) {
+		if (is_string($key) && strlen($key) > 0) {
 			$this->secretKey = $key;
 			$result = true;
 		}
@@ -89,40 +89,10 @@ class JwsMac extends Jws implements Symmetric {
 	 * @param array $header - (Optional) Header data.
 	 * @return string - JWS.
 	 * @throws JwsException
-	 * TODO: Validate $header is array.
 	 */
 	public function sign($payload, $header = []) {
-		if (is_string($payload)) {
-			if (strlen($payload) > 0) {
-				// Remove empty header parameters:
-				foreach ($header as $key => $value) {
-					if (!$value) {
-						unset($header[$key]);
-					}
-				}
-
-				// If not specified, set default signature algorithm:
-				if (!array_key_exists("alg", $header)) {
-					$header["alg"] = $this->defaultAlgo;
-				}
-
-				// Don't trust anyone:
-				$header["alg"] = strtoupper($header["alg"]);
-
-				if ($this->isValidAlgorithm($header["alg"])) {
-					$h = base64_encode(json_encode($header));
-					$p = base64_encode($payload);
-
-					return $h . "." . $p . "." . base64_encode(hash_hmac($this->algos[$header["alg"]], $h . "." . $p, $this->secretKey, true));
-				} else {
-					throw new JwsException("Requested unknown signature algorithm in header", 14);
-				}
-			} else {
-				throw new JwsException("Payload can't be an empty string", 13);
-			}
-		} else {
-			throw new JwsException("Payload should be a string", 12);
-		}
+		$d = $this->prepareSign($this->defaultAlgo, $payload, $header);
+		return $d["h"] . "." . $d["p"] . "." . base64_encode(hash_hmac($this->algos[$d["alg"]], $d["h"] . "." . $d["p"], $this->secretKey, true));
 	}
 
 	/**
@@ -130,22 +100,10 @@ class JwsMac extends Jws implements Symmetric {
 	 * @param string $jws - JWS.
 	 * @return bool - TRUE on valid signature, FALSE on invalid.
 	 * @throws JwsException
-	 * TODO: Validate $jws is string.
 	 */
 	public function verify($jws) {
-		if (strlen(trim($jws)) > 0) {
-			list($h, $p, $s) = explode(".", $jws);
-
-			if ($this->isValidHeader($h)) {
-				$header = json_decode(base64_decode($h, true), true);
-
-				return hash_equals(base64_decode($s, true), hash_hmac($this->algos[strtoupper($header["alg"])], $h . "." . $p, $this->secretKey, true));
-			} else {
-				throw new JwsException("Invalid JWS header", 11);
-			}
-		} else {
-			throw new JwsException("JWS can't be an empty string", 1);
-		}
+		$d = $this->prepareVerify($jws);
+		return hash_equals($d["sig"], hash_hmac($this->algos[$d["alg"]], $d["h"] . "." . $d["p"], $this->secretKey, true));
 	}
 
 	/**
@@ -153,7 +111,7 @@ class JwsMac extends Jws implements Symmetric {
 	 * @param string $algorithm - Algorithm name.
 	 * @return bool - TRUE on valid algorithm, FALSE on invalid.
 	 */
-	protected function isValidAlgorithm($algorithm) {
-		return is_string($algorithm) && array_key_exists(strtoupper($algorithm), $this->algos);
+	protected function isValidAlgorithm(string $algorithm): bool {
+		return array_key_exists(strtoupper($algorithm), $this->algos);
 	}
 }

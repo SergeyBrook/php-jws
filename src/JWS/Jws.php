@@ -10,29 +10,37 @@ use SBrook\JWS\Exception\JwsException;
 /**
  * Class Jws
  * @package SBrook\JWS
+ * @throws JwsException:
+ *  Encode:
+ *   10. Header should be an array
+ *   11. Payload should be a non empty string
+ *   12. Unknown signature algorithm in header
+ *  Decode:
+ *   20. JWS should be a non empty string
+ *   21. Invalid JWS header
+ *   22. Error while decoding JWS header
+ *   23. Error while decoding JWS payload
  */
 abstract class Jws {
 	/**
 	 * Create JWS from payload and optional header and sign it.
 	 * @param $payload - Payload.
-	 * @param $header - Header data (optional).
-	 * @return string - JWS.
+	 * @param $header - Header data.
 	 */
-	abstract public function sign($payload, $header = []);
+	abstract public function sign($payload, $header);
 
 	/**
 	 * Verify JWS signature.
 	 * @param $jws - JWS.
-	 * @return bool - TRUE on valid signature, FALSE on invalid.
 	 */
 	abstract public function verify($jws);
 
 	/**
 	 * Check validity of signature algorithm.
-	 * @param $algorithm - Algorithm.
+	 * @param string $algorithm - Algorithm name.
 	 * @return bool - TRUE on valid algorithm, FALSE on invalid.
 	 */
-	abstract protected function isValidAlgorithm($algorithm);
+	abstract protected function isValidAlgorithm(string $algorithm): bool;
 
 	/**
 	 * Get JWS header.
@@ -40,17 +48,17 @@ abstract class Jws {
 	 * @return array - Decoded JWS header.
 	 * @throws JwsException
 	 */
-	public function getHeader(string $jws) {
-		if ($jws) {
+	public function getHeader($jws) {
+		if (is_string($jws) && strlen($jws) > 0) {
 			list($h, , ) = explode(".", $jws);
 			$header = json_decode(base64_decode($h, true), true);
 			if (is_null($header)) {
-				throw new JwsException("Error while decoding JWS header", 2);
+				throw new JwsException("Error while decoding JWS header", 22);
 			} else {
 				return $header;
 			}
 		} else {
-			throw new JwsException("JWS can't be an empty string", 1);
+			throw new JwsException("JWS should be a non empty string", 20);
 		}
 	}
 
@@ -60,31 +68,86 @@ abstract class Jws {
 	 * @return string - Decoded JWS payload.
 	 * @throws JwsException
 	 */
-	public function getPayload(string $jws) {
-		if ($jws) {
+	public function getPayload($jws) {
+		if (is_string($jws) && strlen($jws) > 0) {
 			list(, $p, ) = explode(".", $jws);
 			$payload = base64_decode($p, true);
 			if ($payload) {
 				return $payload;
 			} else {
-				throw new JwsException("Error while decoding JWS payload", 3);
+				throw new JwsException("Error while decoding JWS payload", 23);
 			}
 		} else {
-			throw new JwsException("JWS can't be an empty string", 1);
+			throw new JwsException("JWS should be a non empty string", 20);
 		}
 	}
 
 	/**
-	 * Check validity of JWS header.
-	 * @param string|array $header - JWS header (encoded|decoded).
-	 * @return bool - TRUE on valid JWS header, FALSE on invalid.
+	 * Validate and prepare data to sign JWS.
+	 * @param string $defaultAlgo - Default signature algorithm name.
+	 * @param string $payload - Payload.
+	 * @param array $header - Header data.
+	 * @return array - Required data to sign JWS.
+	 * @throws JwsException
 	 */
-	protected function isValidHeader($header) {
-		// If encoded header - decode it:
-		if (is_string($header)) {
-			$header = json_decode(base64_decode($header, true), true);
+	protected function prepareSign($defaultAlgo, $payload, $header): array {
+		if (is_array($header)) {
+			if (is_string($payload) && strlen($payload) > 0) {
+				// Remove empty header parameters:
+				foreach ($header as $key => $value) {
+					if (!$value) {
+						unset($header[$key]);
+					}
+				}
+
+				// If not specified, set default signature algorithm:
+				if (!array_key_exists("alg", $header)) {
+					$header["alg"] = $defaultAlgo;
+				}
+
+				// Don't trust anyone:
+				$header["alg"] = strtoupper($header["alg"]);
+
+				if ($this->isValidAlgorithm($header["alg"])) {
+					return [
+						"alg" => $header["alg"],
+						"h" => base64_encode(json_encode($header)),
+						"p" => base64_encode($payload)
+					];
+				} else {
+					throw new JwsException("Unknown signature algorithm in header", 12);
+				}
+			} else {
+				throw new JwsException("Payload should be a non empty string", 11);
+			}
+		} else {
+			throw new JwsException("Header should be an array", 10);
 		}
-		// The only required JWS header parameter is "alg":
-		return is_array($header) && array_key_exists("alg", $header) && $this->isValidAlgorithm($header["alg"]);
+	}
+
+	/**
+	 * Validate and prepare data to verify JWS.
+	 * @param string $jws - JWS.
+	 * @return array - Required data to verify JWS.
+	 * @throws JwsException
+	 */
+	protected function prepareVerify($jws): array {
+		if (is_string($jws) && strlen(trim($jws)) > 0) {
+			list($h, $p, $s) = explode(".", $jws);
+			$header = json_decode(base64_decode($h, true), true);
+
+			if (is_array($header) && array_key_exists("alg", $header) && $this->isValidAlgorithm($header["alg"])) {
+				return [
+					"alg" => strtoupper($header["alg"]),
+					"sig" => base64_decode($s),
+					"h" => $h,
+					"p" => $p
+				];
+			} else {
+				throw new JwsException("Invalid JWS header", 21);
+			}
+		} else {
+			throw new JwsException("JWS should be a non empty string", 20);
+		}
 	}
 }
