@@ -44,8 +44,9 @@ class JwsMac extends Jws implements Symmetric {
 	 * JwsMac constructor.
 	 * @param string $key - JWS signature secret key.
 	 * @throws JwsException
+	 * TODO: Validate $key is string.
 	 */
-	public function __construct(string $key) {
+	public function __construct($key) {
 		if (strlen($key) > 0) {
 			$this->secretKey = $key;
 		} else {
@@ -67,11 +68,11 @@ class JwsMac extends Jws implements Symmetric {
 	/**
 	 * Set JWS signature secret key - overwrites previously set key.
 	 * @param string $key - JWS signature secret key.
-	 * @param string $pass - (Optional) Not in use.
+	 * @param $pass - (Optional) Not in use.
 	 * @return bool - TRUE on success, FALSE on failure.
-	 * TODO: Validate string input.
+	 * TODO: Validate $key is string.
 	 */
-	public function setSecretKey($key, $pass = ""): bool {
+	public function setSecretKey($key, $pass = "") {
 		$result = false;
 
 		if (strlen($key) > 0) {
@@ -88,8 +89,9 @@ class JwsMac extends Jws implements Symmetric {
 	 * @param array $header - (Optional) Header data.
 	 * @return string - JWS.
 	 * @throws JwsException
+	 * TODO: Validate $header is array.
 	 */
-	public function sign($payload, array $header = []): string {
+	public function sign($payload, $header = []) {
 		if (is_string($payload)) {
 			if (strlen($payload) > 0) {
 				// Remove empty header parameters:
@@ -128,15 +130,16 @@ class JwsMac extends Jws implements Symmetric {
 	 * @param string $jws - JWS.
 	 * @return bool - TRUE on valid signature, FALSE on invalid.
 	 * @throws JwsException
+	 * TODO: Validate $jws is string.
 	 */
-	public function verify(string $jws): bool {
+	public function verify($jws) {
 		if (strlen(trim($jws)) > 0) {
 			list($h, $p, $s) = explode(".", $jws);
 
 			if ($this->isValidHeader($h)) {
 				$header = json_decode(base64_decode($h, true), true);
 
-				return hash_equals(base64_decode($s, true), hash_hmac($this->algos[strtoupper($header["alg"])], $h.".".$p, $this->secretKey, true));
+				return hash_equals(base64_decode($s, true), hash_hmac($this->algos[strtoupper($header["alg"])], $h . "." . $p, $this->secretKey, true));
 			} else {
 				throw new JwsException("Invalid JWS header", 11);
 			}
@@ -150,7 +153,7 @@ class JwsMac extends Jws implements Symmetric {
 	 * @param string $algorithm - Algorithm name.
 	 * @return bool - TRUE on valid algorithm, FALSE on invalid.
 	 */
-	protected function isValidAlgorithm($algorithm): bool {
+	protected function isValidAlgorithm($algorithm) {
 		return is_string($algorithm) && array_key_exists(strtoupper($algorithm), $this->algos);
 	}
 }

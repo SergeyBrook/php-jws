@@ -71,9 +71,9 @@ class JwsRsa extends Jws implements Asymmetric
 	 * @param string $key - Private key. Same as openssl_pkey_get_private "key" parameter (http://php.net/manual/en/function.openssl-pkey-get-private.php).
 	 * @param string $pass - (Optional) Private key password. Same as openssl_pkey_get_private "passphrase" parameter (http://php.net/manual/en/function.openssl-pkey-get-private.php).
 	 * @return bool - TRUE on success or FALSE on failure.
-	 * TODO: Validate string input.
+	 * TODO: Validate $key and $pass are strings.
 	 */
-	public function setPrivateKey($key, $pass = ""): bool {
+	public function setPrivateKey($key, $pass = "") {
 		$result = false;
 
 		if ($this->privateKey) {
@@ -92,9 +92,9 @@ class JwsRsa extends Jws implements Asymmetric
 	 * Set public key - overwrites previously set key.
 	 * @param string $key - Public key. Same as openssl_pkey_get_public "certificate" parameter (http://php.net/manual/en/function.openssl-pkey-get-public.php).
 	 * @return bool - TRUE on success or FALSE on failure.
-	 * TODO: Validate string input.
+	 * TODO: Validate $key is string.
 	 */
-	public function setPublicKey($key): bool {
+	public function setPublicKey($key) {
 		$result = false;
 
 		if ($this->publicKey) {
@@ -115,8 +115,9 @@ class JwsRsa extends Jws implements Asymmetric
 	 * @param array $header - (Optional) Header data.
 	 * @return string - JWS.
 	 * @throws JwsException
+	 * TODO: Validate $header is array.
 	 */
-	public function sign($payload, array $header = []): string {
+	public function sign($payload, $header = []) {
 		if ($this->privateKey) {
 			if (is_string($payload)) {
 				if (strlen($payload) > 0) {
@@ -165,8 +166,9 @@ class JwsRsa extends Jws implements Asymmetric
 	 * @param string $jws - JWS.
 	 * @return bool - TRUE on valid signature, FALSE on invalid.
 	 * @throws JwsException
+	 * TODO: Validate $jws is string.
 	 */
-	public function verify(string $jws): bool {
+	public function verify($jws) {
 		if ($this->publicKey) {
 			if (strlen(trim($jws)) > 0) {
 				list($h, $p, $s) = explode(".", $jws);
@@ -198,7 +200,7 @@ class JwsRsa extends Jws implements Asymmetric
 	 * @param string $algorithm - Algorithm name.
 	 * @return bool - TRUE on valid algorithm, FALSE on invalid.
 	 */
-	protected function isValidAlgorithm($algorithm): bool {
+	protected function isValidAlgorithm($algorithm) {
 		return is_string($algorithm) && array_key_exists(strtoupper($algorithm), $this->algos);
 	}
 
@@ -206,11 +208,13 @@ class JwsRsa extends Jws implements Asymmetric
 	 * Get openssl error queue.
 	 * @return string - Openssl error messages separated by space.
 	 */
-	protected function getOpensslErrors(): string {
+	protected function getOpensslErrors() {
 		$message = "";
+
 		while ($m = openssl_error_string()) {
-			$message .= $m." ";
+			$message .= $m . " ";
 		}
+
 		return trim($message);
 	}
 }

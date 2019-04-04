@@ -15,24 +15,24 @@ abstract class Jws {
 	/**
 	 * Create JWS from payload and optional header and sign it.
 	 * @param $payload - Payload.
-	 * @param array $header - Header data (optional).
+	 * @param $header - Header data (optional).
 	 * @return string - JWS.
 	 */
-	abstract public function sign($payload, array $header = []): string;
+	abstract public function sign($payload, $header = []);
 
 	/**
 	 * Verify JWS signature.
-	 * @param string $jws - JWS.
+	 * @param $jws - JWS.
 	 * @return bool - TRUE on valid signature, FALSE on invalid.
 	 */
-	abstract public function verify(string $jws): bool;
+	abstract public function verify($jws);
 
 	/**
 	 * Check validity of signature algorithm.
 	 * @param $algorithm - Algorithm.
 	 * @return bool - TRUE on valid algorithm, FALSE on invalid.
 	 */
-	abstract protected function isValidAlgorithm($algorithm): bool;
+	abstract protected function isValidAlgorithm($algorithm);
 
 	/**
 	 * Get JWS header.
@@ -79,7 +79,7 @@ abstract class Jws {
 	 * @param string|array $header - JWS header (encoded|decoded).
 	 * @return bool - TRUE on valid JWS header, FALSE on invalid.
 	 */
-	protected function isValidHeader($header): bool {
+	protected function isValidHeader($header) {
 		// If encoded header - decode it:
 		if (is_string($header)) {
 			$header = json_decode(base64_decode($header, true), true);
