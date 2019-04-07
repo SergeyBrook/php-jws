@@ -2,7 +2,7 @@
 	"name": "sergeybrook/php-jws",
 	"description": "JSON Web Signature (JWS) library for PHP",
 	"type": "library",
-	"keywords": ["jws"],
+	"keywords": ["JWS", "HMAC", "RSASSA-PKCS1-v1_5", "SHA-256", "SHA-384", "SHA-512"],
 	"license": "MIT",
 	"authors": [
 		{"name": "Sergey Brook", "email": "brook.sergey@gmail.com", "role": "Developer"}
