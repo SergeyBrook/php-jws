@@ -93,9 +93,9 @@ abstract class Jws {
 	protected function prepareSign($defaultAlgo, $payload, $header): array {
 		if (is_array($header)) {
 			if (is_string($payload) && strlen($payload) > 0) {
-				// Remove empty header parameters:
+				// Remove header parameters with empty string values:
 				foreach ($header as $key => $value) {
-					if (!$value) {
+					if (is_string($value) && strlen($value) == 0) {
 						unset($header[$key]);
 					}
 				}

@@ -29,8 +29,12 @@ $pubTwo = "file://./cert/pub-two.crt";
 // For JWS registered header parameter names see (RFC 7515, Section 4.1)
 $header = [
 	"typ" => "TXT",
-	"alg" => "",
-	"cty" => ""
+	"ts0" => "",
+	"ts1" => 0,
+	"ts2" => false,
+	"ts3" => null,
+	"ts4" => chr(32),
+	"ts5" => chr(7)
 ];
 
 $payloadOne = "Original message content";
@@ -49,8 +53,8 @@ try {
 
 	// Get original message header:
 	$h = $jws->getHeader($message);
-	echo "\nHeader => ";
-	print_r($h);
+	// JSON encode just to more clearly show the values:
+	echo "\nHeader => " . json_encode($h) . "\n";
 
 	// Get original message payload:
 	$p = $jws->getPayload($message);
