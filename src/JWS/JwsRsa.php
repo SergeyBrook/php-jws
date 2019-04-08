@@ -74,41 +74,33 @@ class JwsRsa extends Jws implements Asymmetric
 	 * Set private key - overwrites previously set key.
 	 * @param string $key - Private key. Same as openssl_pkey_get_private "key" parameter (http://php.net/manual/en/function.openssl-pkey-get-private.php).
 	 * @param string $pass - (Optional) Private key password. Same as openssl_pkey_get_private "passphrase" parameter (http://php.net/manual/en/function.openssl-pkey-get-private.php).
-	 * @return bool - TRUE on success or FALSE on failure.
+	 * @throws JwsException
 	 */
 	public function setPrivateKey($key, $pass = "") {
-		$result = false;
-
 		if ($this->privateKey) {
 			openssl_pkey_free($this->privateKey);
 		}
 
 		$this->privateKey = openssl_pkey_get_private($key, $pass);
-		if ($this->privateKey) {
-			$result = true;
+		if (!$this->privateKey) {
+			throw new JwsException($this->getOpensslErrors(), 49);
 		}
-
-		return $result;
 	}
 
 	/**
 	 * Set public key - overwrites previously set key.
 	 * @param string $key - Public key. Same as openssl_pkey_get_public "certificate" parameter (http://php.net/manual/en/function.openssl-pkey-get-public.php).
-	 * @return bool - TRUE on success or FALSE on failure.
+	 * @throws JwsException
 	 */
 	public function setPublicKey($key) {
-		$result = false;
-
 		if ($this->publicKey) {
 			openssl_pkey_free($this->publicKey);
 		}
 
 		$this->publicKey = openssl_pkey_get_public($key);
-		if ($this->publicKey) {
-			$result = true;
+		if (!$this->publicKey) {
+			throw new JwsException($this->getOpensslErrors(), 49);
 		}
-
-		return $result;
 	}
 
 	/**
@@ -168,15 +160,15 @@ class JwsRsa extends Jws implements Asymmetric
 
 	/**
 	 * Get openssl error queue.
-	 * @return string - Openssl error messages separated by space.
+	 * @return string - Openssl error message(s).
 	 */
 	protected function getOpensslErrors() {
-		$message = "";
+		$message = "OpenSSL Error(s):";
 
 		while ($m = openssl_error_string()) {
-			$message .= $m . " ";
+			$message .= " " . $m;
 		}
 
-		return trim($message);
+		return $message;
 	}
 }

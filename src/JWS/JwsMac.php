@@ -70,17 +70,14 @@ class JwsMac extends Jws implements Symmetric {
 	 * Set JWS signature secret key - overwrites previously set key.
 	 * @param string $key - JWS signature secret key.
 	 * @param $pass - (Optional) Not in use.
-	 * @return bool - TRUE on success, FALSE on failure.
+	 * @throws JwsException
 	 */
 	public function setSecretKey($key, $pass = "") {
-		$result = false;
-
 		if (is_string($key) && strlen($key) > 0) {
 			$this->secretKey = $key;
-			$result = true;
+		} else {
+			throw new JwsException("Secret key should be a non empty string", 30);
 		}
-
-		return $result;
 	}
 
 	/**
